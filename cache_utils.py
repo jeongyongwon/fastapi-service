@@ -84,6 +84,25 @@ class SimpleCache:
         self.misses = 0
         logger.info("cache_cleared", context={"entries_cleared": count})
 
+    def cleanup_expired(self) -> int:
+        """Remove expired entries from cache"""
+        current_time = time.time()
+        expired_keys = [
+            key for key, entry in self._cache.items()
+            if current_time > entry["expires_at"]
+        ]
+
+        for key in expired_keys:
+            del self._cache[key]
+
+        if expired_keys:
+            logger.info(
+                "cache_cleanup",
+                context={"expired_entries": len(expired_keys)}
+            )
+
+        return len(expired_keys)
+
     def get_stats(self) -> Dict[str, Any]:
         """Get cache statistics"""
         total_requests = self.hits + self.misses
