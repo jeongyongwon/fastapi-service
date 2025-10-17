@@ -11,10 +11,14 @@ from contextlib import asynccontextmanager
 import structlog
 
 from logger_config import get_logger
+from health_check import HealthChecker
 
 
 # 로거 생성
 logger = get_logger(__name__)
+
+# Health checker instance
+health_checker = HealthChecker()
 
 
 @asynccontextmanager
@@ -107,6 +111,23 @@ async def root():
     """루트 엔드포인트"""
     logger.info("root_endpoint_called", message="Root endpoint accessed")
     return {"message": "FastAPI Logging Example", "status": "healthy"}
+
+
+@app.get("/health")
+async def health():
+    """Detailed health check endpoint"""
+    health_status = await health_checker.get_full_status()
+
+    logger.info(
+        "health_check_performed",
+        message="Health check performed",
+        context={
+            "status": health_status["status"],
+            "uptime_seconds": health_status["uptime_seconds"]
+        }
+    )
+
+    return health_status
 
 
 @app.get("/users/{user_id}")
