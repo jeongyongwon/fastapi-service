@@ -181,6 +181,34 @@ async def create_user(user_data: dict):
     """
     사용자 생성 엔드포인트 (INSERT 쿼리 로그 예시)
     """
+    # Validate required fields
+    required_fields = ["name", "email"]
+    missing_fields = [field for field in required_fields if field not in user_data]
+
+    if missing_fields:
+        logger.warning(
+            "validation_error",
+            message="Missing required fields in user creation",
+            context={
+                "missing_fields": missing_fields,
+                "provided_fields": list(user_data.keys())
+            }
+        )
+        raise HTTPException(
+            status_code=400,
+            detail=f"Missing required fields: {', '.join(missing_fields)}"
+        )
+
+    # Email validation
+    email = user_data.get("email", "")
+    if "@" not in email or "." not in email:
+        logger.warning(
+            "validation_error",
+            message="Invalid email format",
+            context={"email": email}
+        )
+        raise HTTPException(status_code=400, detail="Invalid email format")
+
     query_start = time.time()
 
     # INSERT 시뮬레이션
@@ -201,7 +229,14 @@ async def create_user(user_data: dict):
         }
     )
 
-    return {"status": "created", "user_id": 123}
+    user_id = 123
+    logger.info(
+        "user_created",
+        message="New user created successfully",
+        context={"user_id": user_id, "email": email}
+    )
+
+    return {"status": "created", "user_id": user_id}
 
 
 @app.get("/error")
