@@ -210,9 +210,11 @@ async def trigger_error():
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-def perform_division(a: int, b: int) -> int:
+def perform_division(a: int, b: int) -> float:
     """에러 발생 위치를 명확히 하기 위한 헬퍼 함수"""
-    return a // b  # 이 라인에서 ZeroDivisionError 발생
+    if b == 0:
+        raise ValueError("Division by zero is not allowed")
+    return a / b
 
 
 @app.get("/slow-query")
