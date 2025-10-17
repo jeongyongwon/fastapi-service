@@ -96,9 +96,14 @@ def setup_logging():
     """
     # 로그 디렉토리 생성
     log_path = os.getenv("LOG_PATH", "/var/log/fastapi-service")
-    os.makedirs(log_path, exist_ok=True)
+    try:
+        os.makedirs(log_path, exist_ok=True)
+    except PermissionError:
+        # Fallback to current directory if no permission
+        log_path = "./logs"
+        os.makedirs(log_path, exist_ok=True)
 
-    # 파일 핸들러 추가
+    # 파일 핸들러 추가 with rotation support
     file_handler = logging.FileHandler(f"{log_path}/app.log")
     file_handler.setLevel(logging.INFO)
 
