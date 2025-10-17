@@ -114,7 +114,12 @@ async def logging_middleware(request: Request, call_next):
 async def root():
     """루트 엔드포인트"""
     logger.info("root_endpoint_called", message="Root endpoint accessed")
-    return {"message": "FastAPI Logging Example", "status": "healthy"}
+    return {
+        "message": "FastAPI Logging Example",
+        "status": "healthy",
+        "version": "1.0.0",
+        "environment": "production"
+    }
 
 
 @app.get("/health")
