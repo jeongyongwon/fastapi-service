@@ -257,6 +257,10 @@ async def create_user(user_data: dict):
         context={"user_id": user_id, "email": email}
     )
 
+    # Invalidate cache when new user is created
+    cache_key = f"user:{user_id}"
+    user_cache.delete(cache_key)
+
     return {"status": "created", "user_id": user_id}
 
 
