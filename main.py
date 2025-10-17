@@ -149,9 +149,24 @@ async def get_user(user_id: int):
         logger.warning(
             "invalid_user_id",
             message="Invalid user ID provided",
-            context={"user_id": user_id}
+            context={"user_id": user_id, "validation": "user_id_must_be_positive"}
         )
-        raise HTTPException(status_code=400, detail="User ID must be positive")
+        raise HTTPException(
+            status_code=400,
+            detail={"error": "User ID must be positive", "provided_id": user_id}
+        )
+
+    # Validation: user_id must not exceed max value
+    if user_id > 1000000:
+        logger.warning(
+            "user_id_out_of_range",
+            message="User ID exceeds maximum allowed value",
+            context={"user_id": user_id, "max_allowed": 1000000}
+        )
+        raise HTTPException(
+            status_code=400,
+            detail={"error": "User ID out of range", "max_allowed": 1000000}
+        )
 
     # Check cache first
     cache_key = f"user:{user_id}"
