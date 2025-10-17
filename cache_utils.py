@@ -112,5 +112,17 @@ class SimpleCache:
             "entries": len(self._cache),
             "hits": self.hits,
             "misses": self.misses,
-            "hit_rate": round(hit_rate, 2)
+            "hit_rate": round(hit_rate, 2),
+            "total_requests": total_requests
+        }
+
+    def get_memory_usage(self) -> Dict[str, Any]:
+        """캐시 메모리 사용량 추정"""
+        import sys
+        total_size = sum(sys.getsizeof(entry) for entry in self._cache.values())
+
+        return {
+            "total_entries": len(self._cache),
+            "estimated_bytes": total_size,
+            "estimated_mb": round(total_size / (1024 * 1024), 2)
         }
