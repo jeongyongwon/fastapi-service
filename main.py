@@ -12,6 +12,7 @@ import structlog
 
 from logger_config import get_logger
 from health_check import HealthChecker
+from cache_utils import SimpleCache
 
 
 # 로거 생성
@@ -19,6 +20,9 @@ logger = get_logger(__name__)
 
 # Health checker instance
 health_checker = HealthChecker()
+
+# Cache instance
+user_cache = SimpleCache(default_ttl=60)  # 1 minute TTL
 
 
 @asynccontextmanager
@@ -144,6 +148,18 @@ async def get_user(user_id: int):
         )
         raise HTTPException(status_code=400, detail="User ID must be positive")
 
+    # Check cache first
+    cache_key = f"user:{user_id}"
+    cached_user = user_cache.get(cache_key)
+
+    if cached_user:
+        logger.info(
+            "cache_hit",
+            message="User data retrieved from cache",
+            context={"user_id": user_id, "cache_key": cache_key}
+        )
+        return cached_user
+
     # 쿼리 실행 시뮬레이션
     query_start = time.time()
 
@@ -169,11 +185,16 @@ async def get_user(user_id: int):
         }
     )
 
-    return {
+    user_data = {
         "user_id": user_id,
         "name": "John Doe",
         "email": "john@example.com"
     }
+
+    # Store in cache
+    user_cache.set(cache_key, user_data)
+
+    return user_data
 
 
 @app.post("/users")
