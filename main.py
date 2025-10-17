@@ -240,6 +240,19 @@ async def create_user(user_data: dict):
             detail=f"Missing required fields: {', '.join(missing_fields)}"
         )
 
+    # Name validation
+    name = user_data.get("name", "").strip()
+    if not name or len(name) < 2:
+        logger.warning(
+            "validation_error",
+            message="Invalid name: must be at least 2 characters",
+            context={"name": name, "length": len(name)}
+        )
+        raise HTTPException(
+            status_code=400,
+            detail="Name must be at least 2 characters long"
+        )
+
     # Email validation
     email = user_data.get("email", "")
     if "@" not in email or "." not in email:
@@ -249,6 +262,15 @@ async def create_user(user_data: dict):
             context={"email": email}
         )
         raise HTTPException(status_code=400, detail="Invalid email format")
+
+    # Email length validation
+    if len(email) > 254:  # RFC 5321
+        logger.warning(
+            "validation_error",
+            message="Email address too long",
+            context={"email": email, "length": len(email), "max_length": 254}
+        )
+        raise HTTPException(status_code=400, detail="Email address exceeds maximum length")
 
     query_start = time.time()
 
