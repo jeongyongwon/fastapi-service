@@ -114,6 +114,15 @@ async def get_user(user_id: int):
     """
     사용자 조회 엔드포인트 (DB 쿼리 로그 예시)
     """
+    # Validation: user_id must be positive
+    if user_id <= 0:
+        logger.warning(
+            "invalid_user_id",
+            message="Invalid user ID provided",
+            context={"user_id": user_id}
+        )
+        raise HTTPException(status_code=400, detail="User ID must be positive")
+
     # 쿼리 실행 시뮬레이션
     query_start = time.time()
 
