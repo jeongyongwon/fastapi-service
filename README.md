@@ -36,11 +36,16 @@ docker run -p 8000:8000 \
 
 ## API 엔드포인트
 
+### Core Endpoints
 - `GET /` - 헬스 체크
-- `GET /users/{user_id}` - 사용자 조회 (SELECT 쿼리 로그)
-- `POST /users` - 사용자 생성 (INSERT 쿼리 로그)
+- `GET /health` - 상세 헬스 체크 (데이터베이스, Redis 상태 포함)
+- `GET /users/{user_id}` - 사용자 조회 (캐싱 지원, SELECT 쿼리 로그)
+- `POST /users` - 사용자 생성 (유효성 검사, INSERT 쿼리 로그)
 - `GET /error` - 에러 로그 테스트
 - `GET /slow-query` - 느린 쿼리 경고 로그 테스트
+
+### Test Error Endpoints
+다양한 에러 시나리오 테스트를 위한 엔드포인트들이 `/test/*` 경로에 제공됩니다.
 
 ## 로그 예시
 
