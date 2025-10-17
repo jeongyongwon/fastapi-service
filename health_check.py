@@ -86,8 +86,34 @@ class HealthChecker:
         return {
             "status": "healthy" if overall_healthy else "degraded",
             "uptime_seconds": round(self.get_uptime(), 2),
+            "timestamp": time.time(),
+            "service_name": "fastapi-service",
             "components": {
                 "database": db_health,
                 "redis": redis_health
             }
         }
+
+    async def check_external_api(self) -> Dict[str, Any]:
+        """외부 API 연결 상태 확인"""
+        try:
+            check_start = time.time()
+            time.sleep(0.02)  # 외부 API 호출 시뮬레이션
+            latency_ms = (time.time() - check_start) * 1000
+
+            return {
+                "status": "healthy",
+                "latency_ms": round(latency_ms, 2),
+                "endpoint": "https://api.example.com"
+            }
+        except Exception as exc:
+            logger.error(
+                "external_api_check_failed",
+                message="External API health check failed",
+                error={"type": type(exc).__name__, "message": str(exc)},
+                exc_info=True
+            )
+            return {
+                "status": "unhealthy",
+                "error": str(exc)
+            }
