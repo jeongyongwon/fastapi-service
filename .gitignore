@@ -21,6 +21,8 @@ wheels/
 
 # Environment
 .env
+.env.*
+!.env.example
 .venv
 env/
 venv/
@@ -34,13 +36,31 @@ venv.bak/
 *.swp
 *.swo
 *~
+.DS_Store
 
 # Testing
 .pytest_cache/
 .coverage
 htmlcov/
 *.cover
+.tox/
+.hypothesis/
 
 # Logs
 *.log
 logs/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Docker
+docker-compose.override.yml
+
+# Alembic
+alembic/versions/*.pyc
