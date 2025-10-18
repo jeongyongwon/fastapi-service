@@ -18,6 +18,10 @@ from cache_utils import SimpleCache
 # 로거 생성
 logger = get_logger(__name__)
 
+# INTENTIONAL ERROR FOR TESTING: This will cause a NameError
+# This simulates a database connection error at a specific line
+undefined_database_connection_variable
+
 # Health checker instance
 health_checker = HealthChecker()
 
