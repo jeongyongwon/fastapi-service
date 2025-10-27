@@ -11,6 +11,10 @@ from datetime import datetime, timezone
 import socket
 import os
 from typing import Any
+import pytz
+
+# 한국 시간대 설정
+KST = pytz.timezone('Asia/Seoul')
 
 
 def add_common_fields(logger: Any, method_name: str, event_dict: dict) -> dict:
@@ -22,9 +26,10 @@ def add_common_fields(logger: Any, method_name: str, event_dict: dict) -> dict:
     event_dict["environment"] = os.getenv("ENVIRONMENT", "development")
     event_dict["host"] = socket.gethostname()
 
-    # timestamp를 ISO 8601 UTC 형식으로 변환
+    # timestamp를 ISO 8601 KST 형식으로 변환 (한국 시간)
     if "timestamp" not in event_dict:
-        event_dict["timestamp"] = datetime.now(timezone.utc).isoformat()
+        kst_time = datetime.now(KST)
+        event_dict["timestamp"] = kst_time.isoformat()
 
     # level을 대문자로 통일
     if "level" in event_dict:
@@ -103,8 +108,24 @@ def setup_logging():
         log_path = "./logs"
         os.makedirs(log_path, exist_ok=True)
 
-    # 파일 핸들러 추가 with rotation support
-    file_handler = logging.FileHandler(f"{log_path}/app.log")
+    # 파일 핸들러 추가 with daily rotation support
+    from logging.handlers import TimedRotatingFileHandler
+
+    # 날짜별 파일명 생성을 위한 커스텀 네이머
+    def namer(default_name):
+        # app.log.2025-10-26 -> app-2025-10-26.log 형식으로 변경
+        base_filename, ext, date = default_name.rsplit('.', 2)
+        return f"{base_filename}-{date}.log"
+
+    file_handler = TimedRotatingFileHandler(
+        f"{log_path}/app.log",
+        when='midnight',  # 매일 자정에 로테이션
+        interval=1,       # 1일 간격
+        backupCount=30,   # 30일치 로그 보관
+        encoding='utf-8'
+    )
+    file_handler.suffix = "%Y-%m-%d"
+    file_handler.namer = namer
     file_handler.setLevel(logging.INFO)
 
     # 기본 logging 설정
@@ -124,9 +145,8 @@ def setup_logging():
             structlog.contextvars.merge_contextvars,
             # 로그 레벨 추가
             structlog.stdlib.add_log_level,
-            # 타임스탬프 추가 (ISO 8601 형식)
-            structlog.processors.TimeStamper(fmt="iso", utc=True, key="timestamp"),
-            # 공통 필드 추가
+            # 타임스탬프는 add_common_fields에서 KST로 추가하므로 여기서는 제외
+            # 공통 필드 추가 (KST timestamp 포함)
             add_common_fields,
             # 분산 추적 컨텍스트 추가
             add_trace_context,

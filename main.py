@@ -13,6 +13,7 @@ import structlog
 from logger_config import get_logger
 from health_check import HealthChecker
 from cache_utils import SimpleCache
+from test_errors import router as test_errors_router
 
 
 # 로거 생성
@@ -20,7 +21,7 @@ logger = get_logger(__name__)
 
 # INTENTIONAL ERROR FOR TESTING: This will cause a NameError
 # This simulates a database connection error at a specific line
-undefined_database_connection_variable
+# undefined_database_connection_variable  # 주석 처리하여 앱 정상 시작
 
 # Health checker instance
 health_checker = HealthChecker()
@@ -37,7 +38,17 @@ async def lifespan(app: FastAPI):
     logger.info("application_shutdown", message="FastAPI application shutdown")
 
 
-app = FastAPI(title="FastAPI Logging Example", lifespan=lifespan)
+app = FastAPI(
+    title="FastAPI Logging Example",
+    description="통합 로그 포맷을 사용하는 예시 애플리케이션 with 테스트 에러 API",
+    version="1.0.0",
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc"
+)
+
+# 테스트 에러 라우터 추가
+app.include_router(test_errors_router)
 
 
 @app.middleware("http")
