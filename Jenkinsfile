@@ -146,7 +146,8 @@ pipeline {
         }
         failure {
             script {
-                sh './jenkins-logger.sh ERROR "Build failed - triggering failure webhook"'
+                sh 'chmod +x jenkins-logger.sh || true'
+                sh './jenkins-logger.sh ERROR "Build failed - triggering failure webhook" || true'
                 // Webhook to DevOps API with error details
                 sh '''
                     curl -X POST http://host.docker.internal:8000/webhook/jenkins \
@@ -164,7 +165,8 @@ pipeline {
         }
         always {
             script {
-                sh './jenkins-logger.sh INFO "Build finished - cleaning workspace"'
+                sh 'chmod +x jenkins-logger.sh || true'
+                sh './jenkins-logger.sh INFO "Build finished - cleaning workspace" || true'
                 cleanWs()
             }
         }
