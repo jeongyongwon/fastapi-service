@@ -117,7 +117,8 @@ async def logging_middleware(request: Request, call_next):
             error={
                 "type": type(exc).__name__,
                 "message": str(exc),
-            }
+            },
+            exc_info=True  # 스택 트레이스 및 파일 위치 정보 추가
         )
         raise
     finally:

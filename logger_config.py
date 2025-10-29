@@ -56,41 +56,54 @@ def add_trace_context(logger: Any, method_name: str, event_dict: dict) -> dict:
 
 def add_error_location(logger: Any, method_name: str, event_dict: dict) -> dict:
     """
-    에러 발생 시 파일 위치 정보를 추가하는 프로세서
+    에러 발생 시 파일 위치 정보 및 스택 트레이스를 추가하는 프로세서
     """
     # exc_info가 있는 경우 (에러 로그)
-    if event_dict.get("exc_info"):
-        exc_type, exc_value, exc_tb = event_dict["exc_info"]
+    exc_info = event_dict.get("exc_info")
+    if exc_info:
+        # exc_info가 True인 경우 현재 예외 정보 가져오기
+        if exc_info is True:
+            import sys
+            exc_info = sys.exc_info()
 
-        if exc_tb:
-            # 스택 트레이스에서 프로젝트 파일 찾기 (site-packages 제외)
-            tb = exc_tb
-            while tb is not None:
-                frame = tb.tb_frame
-                filename = frame.f_code.co_filename
+        # 튜플인지 확인
+        if isinstance(exc_info, tuple) and len(exc_info) == 3:
+            exc_type, exc_value, exc_tb = exc_info
 
-                # 프로젝트 파일인지 확인 (site-packages, lib 제외)
-                if "site-packages" not in filename and "/lib/" not in filename and "\\lib\\" not in filename:
-                    # 프로젝트 루트 기준 상대 경로로 변환
-                    if "/app/" in filename:
-                        relative_path = filename.split("/app/")[-1]
-                    elif "\\app\\" in filename:
-                        relative_path = filename.split("\\app\\")[-1]
-                    else:
-                        relative_path = os.path.basename(filename)
+            if exc_tb:
+                # error 필드 초기화
+                if "error" not in event_dict:
+                    event_dict["error"] = {}
 
-                    # error 필드 확장
-                    if "error" not in event_dict:
-                        event_dict["error"] = {}
+                # 전체 스택 트레이스를 문자열로 변환
+                tb_lines = traceback.format_exception(exc_type, exc_value, exc_tb)
+                full_traceback = "".join(tb_lines)
+                event_dict["error"]["stack_trace"] = full_traceback
 
-                    event_dict["error"]["location"] = {
-                        "file": relative_path,
-                        "line": tb.tb_lineno,
-                        "function": frame.f_code.co_name
-                    }
-                    break
+                # 스택 트레이스에서 프로젝트 파일 찾기 (site-packages 제외)
+                tb = exc_tb
+                while tb is not None:
+                    frame = tb.tb_frame
+                    filename = frame.f_code.co_filename
 
-                tb = tb.tb_next
+                    # 프로젝트 파일인지 확인 (site-packages, lib 제외)
+                    if "site-packages" not in filename and "/lib/" not in filename and "\\lib\\" not in filename:
+                        # 프로젝트 루트 기준 상대 경로로 변환
+                        if "/app/" in filename:
+                            relative_path = filename.split("/app/")[-1]
+                        elif "\\app\\" in filename:
+                            relative_path = filename.split("\\app\\")[-1]
+                        else:
+                            relative_path = os.path.basename(filename)
+
+                        event_dict["error"]["location"] = {
+                            "file": relative_path,
+                            "line": tb.tb_lineno,
+                            "function": frame.f_code.co_name
+                        }
+                        break
+
+                    tb = tb.tb_next
 
     return event_dict
 
